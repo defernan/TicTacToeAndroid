@@ -1,6 +1,6 @@
 Project3 Readme
 
-Team Name-
+Team Name- The Arch Penguins
 
 Team Members-Dezmon Fernandez
              Charles Tandy
