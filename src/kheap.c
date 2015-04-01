@@ -148,7 +148,16 @@ ssize_t find_smallest_hole(size_t size,
    // 3: if large enough, return
    // 4: if not large enough, continue to the next chunk in the iteration
    // 5: if the end is reached before a chunk is found, return -1
+  
+   //iterate
+   /*
+   size_t i = 0;
+   void* chunk;
+   while( (chunk = sorted_arrray_lookup(i, heap->free_list) ) != NULL){
+   
 
+        i++;
+   }*/
    return 0;
 }
 
@@ -156,13 +165,26 @@ ssize_t find_smallest_hole(size_t size,
 void add_hole(void *start, void *end, struct heap *heap)
 {
    // TODO: IMPLEMENT THIS FUNCTION
-
    // pseudocode:
    // 0. determine if coalesing is possible; if so, remove the appropriate
    //    holes on either side of start and end, and then call add_hole
    //    recursively on the larger region (can skip if no coalesing)
    // 1. write header and footer to memory
    // 2. add chunk to free list
+  
+   /*
+   //0
+
+   //1 
+   struct header* chunk=(struct header*) start;
+   struct footer* footer=(struct footer*) end;
+
+   footer->header = chunk;
+   
+   //2 
+   struct sorted_array list = heap->free_list;
+   sorted_array_insert(chunk, list );
+   */
 }
 
 void *kalloc_heap(size_t size, u8int page_align, struct heap *heap)
