@@ -172,19 +172,16 @@ void add_hole(void *start, void *end, struct heap *heap)
    // 1. write header and footer to memory
    // 2. add chunk to free list
   
-   /*
    //0
 
-   //1 
-   struct header* chunk=(struct header*) start;
-   struct footer* footer=(struct footer*) end;
+   //1 write header and footer to memory 
+   struct header chunk;
+   struct footer footer;
 
-   footer->header = chunk;
+   footer.header = &chunk;
    
-   //2 
-   struct sorted_array list = heap->free_list;
-   sorted_array_insert(chunk, list );
-   */
+   //2 add chunk to free list 
+   sorted_array_insert(&chunk, &heap->free_list );
 }
 
 void *kalloc_heap(size_t size, u8int page_align, struct heap *heap)
