@@ -3,7 +3,24 @@
 #include "kheap.h"
 
 #include "common.h"
+/*******************************************************************
+/ Things believed to be complete
+/ memset -> YES
+/ add_hole -> YES - coalescing
+/ find_smallesthole-> YES
+/ kalloc_heap ->NO
+/ kfree_heap ->NO
+/ page allign in kalloc_heap -> NO
+/ colescing -> NO
+/ ******************************************************************/
 
+/*******************************************************************
+/ POTENTIAL ERRORS
+/ add_hole -> not sure if footer is right
+/ find_smallest_hole -> not sure if hole size is right ie with footer and header accounted for
+/
+/
+/ ******************************************************************/
 // headers for local functions
 void *align(void *p);
 ssize_t find_smallest_hole(size_t size,
@@ -149,16 +166,34 @@ ssize_t find_smallest_hole(size_t size,
    // 4: if not large enough, continue to the next chunk in the iteration
    // 5: if the end is reached before a chunk is found, return -1
   
-   //iterate
-   /*
-   size_t i = 0;
-   void* chunk;
-   while( (chunk = sorted_arrray_lookup(i, heap->free_list) ) != NULL){
-   
-
-        i++;
-   }*/
-   return 0;
+   //1 iterate
+   size_t i;
+   for(i = 0; i < heap->free_list.size; i++){
+        struct header *hole = (struct header*)sorted_array_lookup(i, &heap->free_list);
+        //2
+        //check if kalloc calls page align
+        if( page_align > 0 ){
+            //page align
+            u32int loc = (u32int) hole;
+            s32int offset = 0;
+            if( (loc + sizeof(hole)) & 0xFFFFF000 != 0){
+                //align
+                offset = PAGE_SIZE - (loc + sizeof(hole))%PAGE_SIZE;
+            }
+            s32int holeSize = (s32int)hole->size - offset;
+            //3
+            //check for fit
+            if(holeSize >= size){
+                return i;
+            }
+        }else if(hole->size >= size){
+            //3
+            return i;
+        }
+        //4 iterate
+   }
+   //5 end reached
+   return -1;
 }
 
 // creates and writes a hole that spans [start,end)
@@ -175,13 +210,17 @@ void add_hole(void *start, void *end, struct heap *heap)
    //0
 
    //1 write header and footer to memory 
-   struct header chunk;
-   struct footer footer;
+   struct header *hole = (struct header*) start;
+   hole->size = heap->end_address - heap->start_address;
+   hole->magic = HEAP_MAGIC; 
+   hole->allocated = 0; //0 or 1?
 
-   footer.header = &chunk;
+   struct footer* footer = (struct footer*)( end - sizeof(footer) );
+   footer->header = hole;
+   footer->magic = HEAP_MAGIC;
    
    //2 add chunk to free list 
-   sorted_array_insert(&chunk, &heap->free_list );
+   sorted_array_insert(hole, &heap->free_list );
 }
 
 void *kalloc_heap(size_t size, u8int page_align, struct heap *heap)
