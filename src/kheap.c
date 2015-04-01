@@ -18,7 +18,7 @@
 / POTENTIAL ERRORS
 / add_hole -> not sure if footer is right
 / find_smallest_hole -> not sure if hole size is right ie with footer and header accounted for
-/
+/                    -> also not quite sure if page alignment check is right to check offset
 /
 / ******************************************************************/
 // headers for local functions
@@ -176,7 +176,7 @@ ssize_t find_smallest_hole(size_t size,
             //page align
             u32int loc = (u32int) hole;
             s32int offset = 0;
-            if( (loc + sizeof(hole)) & 0xFFFFF000 != 0){
+            if( (loc & PAGE_SIZE) != loc){
                 //align
                 offset = PAGE_SIZE - (loc + sizeof(hole))%PAGE_SIZE;
             }
