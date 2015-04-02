@@ -239,6 +239,49 @@ void *kalloc_heap(size_t size, u8int page_align, struct heap *heap)
    // 6. mark the chunk as allocated, write the header/footer (if necessary)
    // 7. return pointer to allocated portion of memory
 
+   // 1 figure out size of entry
+   u32int new_size = (u32int) size + sizeof(struct header) + sizeof(struct footer);
+   // 2 find a hole
+   u32int iterator = (u32int) find_smallest_hole(new_size, page_align, heap);
+   // 3 if no hole, resize heap
+   if (iterator == -1) {
+      u32int old_heap_length = heap->end_address - heap->start_address;
+      u32int old_end_address = heap->end_address; 
+      heap_resize(old_heap_length+new_size, heap);
+      u32int new_heap_length = heap->end_address - heap->start_address;
+
+      u32int f_list = -1;
+      u32int value = 0x0;
+      for (int i = 0; i < heap->free_list.size; i++) {
+         u32int temp_value = (u32int) sorted_array_lookup((size_t)i, &heap->free_list);
+         if (temp_value > value) {
+            value = temp_value;
+            f_list = i;
+         }
+      }
+
+      if (f_list == -1) {
+         header *head = (header *) old_end_address;
+         head->magic = HEAP_MAGIC;
+         head->size = (size_t) new_heap_length - old_heap_length;
+         head->allocated = 0;
+         footer *foot = (footer *) (old_end_address + head->size - sizeof(struct footer));
+         foot->majic = HEAP_MAGIC;
+         foot->header = head;
+         sorted_array_insert((void*)head, &head->free_list);
+      }
+      else {
+         header *head = sorted_array_lookup(f_list, &heap->free_list);
+         head->size += new_heap_length - old_heap_length;
+         footer *foot = (footer *) ((u32int)head + head->size - sizeof(struct footer));
+         foot->header = head;
+         foot->magic = HEAP_MAGIC;
+      }
+      return kalloc_heap(size, page_align, heap);
+   }
+   // 4
+
+
    return NULL;
 }
 
