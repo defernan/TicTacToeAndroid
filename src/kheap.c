@@ -168,7 +168,7 @@ ssize_t find_smallest_hole(size_t size,
    // 5: if the end is reached before a chunk is found, return -1
   
    //1 iterate
-   size_t i;
+   ssize_t i;
    for(i = 0; i < heap->free_list.size; i++){
         struct header *hole = (struct header*)sorted_array_lookup(i, &heap->free_list);
         //2
@@ -243,7 +243,7 @@ void *kalloc_heap(size_t size, u8int page_align, struct heap *heap)
    // 1 figure out size of entry
    u32int new_size = (u32int) size + sizeof(struct header) + sizeof(struct footer);
    // 2 find a hole
-   u32int iterator = (u32int) find_smallest_hole(new_size, page_align, heap);
+   ssize_t iterator = find_smallest_hole(new_size, page_align, heap);
    // 3 if no hole, resize heap
    if (iterator == -1) {
       u32int old_heap_length = heap->end_address - heap->start_address;
