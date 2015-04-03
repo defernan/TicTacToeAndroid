@@ -8,7 +8,7 @@
 / memset -> YES
 / add_hole -> YES - coalescing
 / find_smallesthole-> YES
-/ kalloc_heap ->NO
+/ kalloc_heap ->NO, in progress, really close
 / kfree_heap ->NO
 / page allign in kalloc_heap -> NO
 / colescing -> NO
@@ -19,6 +19,7 @@
 / add_hole -> not sure if footer is right
 / find_smallest_hole -> not sure if hole size is right ie with footer and header accounted for
 /                    -> also not quite sure if page alignment check is right to check offset
+/ kalloc_heap written, but still failing tests, needs to be debugged
 /
 / ******************************************************************/
 // headers for local functions
@@ -252,37 +253,83 @@ void *kalloc_heap(size_t size, u8int page_align, struct heap *heap)
 
       u32int f_list = -1;
       u32int value = 0x0;
-      for (int i = 0; i < heap->free_list.size; i++) {
-         u32int temp_value = (u32int) sorted_array_lookup((size_t)i, &heap->free_list);
+      size_t i;
+      for (i = 0; i < heap->free_list.size; i++) {
+         u32int temp_value = (u32int) sorted_array_lookup(i, &heap->free_list);
          if (temp_value > value) {
             value = temp_value;
-            f_list = i;
+            f_list = (u32int)i;
          }
       }
 
       if (f_list == -1) {
-         header *head = (header *) old_end_address;
+         struct header *head = (struct header *) old_end_address;
          head->magic = HEAP_MAGIC;
          head->size = (size_t) new_heap_length - old_heap_length;
          head->allocated = 0;
-         footer *foot = (footer *) (old_end_address + head->size - sizeof(struct footer));
-         foot->majic = HEAP_MAGIC;
+         struct footer *foot = (struct footer *) (old_end_address + head->size - sizeof(struct footer));
+         foot->magic = HEAP_MAGIC;
          foot->header = head;
-         sorted_array_insert((void*)head, &head->free_list);
+         sorted_array_insert((void*)head, &heap->free_list);
       }
       else {
-         header *head = sorted_array_lookup(f_list, &heap->free_list);
+         struct header *head = sorted_array_lookup(f_list, &heap->free_list);
          head->size += new_heap_length - old_heap_length;
-         footer *foot = (footer *) ((u32int)head + head->size - sizeof(struct footer));
+         struct footer *foot = (struct footer *) ((u32int)head + head->size - sizeof(struct footer));
          foot->header = head;
          foot->magic = HEAP_MAGIC;
       }
       return kalloc_heap(size, page_align, heap);
    }
-   // 4
+   // 5 page align
+   struct header *old_hole_head = (struct header *)sorted_array_lookup((size_t)iterator, &heap->free_list);
+   u32int old_hole_pos = (u32int)old_hole_head;
+   u32int old_hole_size = (u32int)old_hole_head->size;
+   if (old_hole_size - new_size < sizeof(struct header) + sizeof(struct footer)) {
+      size += old_hole_size - new_size;
+      new_size = old_hole_size;
+   }
+   // double check this, not completely sure here
+   if (page_align) {
+      u32int new_loc = old_hole_pos + PAGE_SIZE - sizeof(struct header);
+      struct header *hole = (struct header *) ((u32int)new_loc - sizeof(struct footer));
+      hole->size = PAGE_SIZE - sizeof(struct header);
+      hole->magic = HEAP_MAGIC;
+      hole->allocated = 0;
+      struct footer *hole_foot = (struct footer *) ((u32int)new_loc - sizeof(struct footer));
+      hole_foot->magic = HEAP_MAGIC;
+      hole_foot->header = hole;
+      old_hole_pos = new_loc;
+      old_hole_size = old_hole_size - hole->size;
+   }
+   else {
+      // 4
+      sorted_array_remove((size_t)iterator, &heap->free_list);
+   }
+   // 6
+   struct header *block = (struct header *)old_hole_pos;
+   block->magic = HEAP_MAGIC;
+   block->allocated = 1;
+   block->size = new_size;
+   struct footer *block_foot = (struct footer *) (old_hole_pos + sizeof(struct header) + size);
+   block_foot->magic = HEAP_MAGIC;
+   block_foot->header = block;
+   // not sure if the following is necessary for project
+   // adds a new hole if the original hole was split
+   if (old_hole_size - new_size > 0) {
+      struct header *hole = (struct header *) (old_hole_pos + size + sizeof(struct header) + sizeof(struct footer));
+      hole->magic = HEAP_MAGIC;
+      hole->allocated = 0;
+      hole->size = old_hole_size - new_size;
+      struct footer *hole_foot = (struct footer *) ((u32int)hole + old_hole_size - new_size - sizeof(struct footer));
+      if ((u32int)hole_foot < heap->end_address) {
+         hole_foot->magic = HEAP_MAGIC;
+         hole_foot->header = hole;
+      }
+      sorted_array_insert((void*)hole, &heap->free_list);
+   }
 
-
-   return NULL;
+   return (void *) ((u32int)block + sizeof(struct header));
 }
 
 void kfree_heap(void *p, struct heap *heap)
