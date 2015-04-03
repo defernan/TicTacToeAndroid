@@ -179,7 +179,7 @@ ssize_t find_smallest_hole(size_t size,
             s32int offset = 0;
             if( (loc & PAGE_SIZE) != loc){
                 //align
-                offset = PAGE_SIZE - (loc + sizeof(hole))%PAGE_SIZE;
+                offset = PAGE_SIZE - (loc + sizeof(struct header))%PAGE_SIZE;
             }
             s32int holeSize = (s32int)hole->size - offset;
             //3
@@ -216,9 +216,9 @@ void add_hole(void *start, void *end, struct heap *heap)
    hole->magic = HEAP_MAGIC; 
    hole->allocated = 0; //0 or 1?
 
-   struct footer* footer = (struct footer*)( end - sizeof(footer) );
-   footer->header = hole;
-   footer->magic = HEAP_MAGIC;
+   struct footer* hole_footer = (struct footer*)( end - sizeof(struct footer) );
+   hole_footer->header = hole;
+   hole_footer->magic = HEAP_MAGIC;
    
    //2 add chunk to free list 
    sorted_array_insert(hole, &heap->free_list );
