@@ -282,7 +282,7 @@ void *kalloc_heap(size_t size, u8int page_align, struct heap *heap)
       return kalloc_heap(size, page_align, heap);
    }
    // 5 page align
-   struct header *old_hole_head = (struct header *)sorted_array_lookup((size_t)iterator, &heap->free_list);
+   struct header *old_hole_head = (struct header *)sorted_array_lookup((ssize_t)iterator, &heap->free_list);
    u32int old_hole_pos = (u32int)old_hole_head;
    u32int old_hole_size = (u32int)old_hole_head->size;
    if (old_hole_size - new_size < sizeof(struct header) + sizeof(struct footer)) {
@@ -304,7 +304,7 @@ void *kalloc_heap(size_t size, u8int page_align, struct heap *heap)
    }
    else {
       // 4
-      sorted_array_remove((size_t)iterator, &heap->free_list);
+      sorted_array_remove((ssize_t)iterator, &heap->free_list);
    }
    // 6
    struct header *block = (struct header *)old_hole_pos;
