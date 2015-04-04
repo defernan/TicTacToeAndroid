@@ -168,7 +168,7 @@ ssize_t find_smallest_hole(size_t size,
    // 5: if the end is reached before a chunk is found, return -1
   
    //1 iterate
-   ssize_t i;
+   size_t i;
    for(i = 0; i < heap->free_list.size; i++){
         struct header *hole = (struct header*)sorted_array_lookup(i, &heap->free_list);
         //2
@@ -179,7 +179,7 @@ ssize_t find_smallest_hole(size_t size,
             s32int offset = 0;
             if( (loc & PAGE_SIZE) != loc){
                 //align
-                offset = PAGE_SIZE - (loc + sizeof(struct header))%PAGE_SIZE;
+                offset = PAGE_SIZE - (loc + sizeof(hole))%PAGE_SIZE;
             }
             s32int holeSize = (s32int)hole->size - offset;
             //3
@@ -216,9 +216,9 @@ void add_hole(void *start, void *end, struct heap *heap)
    hole->magic = HEAP_MAGIC; 
    hole->allocated = 0; //0 or 1?
 
-   struct footer* hole_footer = (struct footer*)( end - sizeof(struct footer) );
-   hole_footer->header = hole;
-   hole_footer->magic = HEAP_MAGIC;
+   struct footer* footer = (struct footer*)( end - sizeof(footer) );
+   footer->header = hole;
+   footer->magic = HEAP_MAGIC;
    
    //2 add chunk to free list 
    sorted_array_insert(hole, &heap->free_list );
@@ -243,7 +243,7 @@ void *kalloc_heap(size_t size, u8int page_align, struct heap *heap)
    // 1 figure out size of entry
    u32int new_size = (u32int) size + sizeof(struct header) + sizeof(struct footer);
    // 2 find a hole
-   ssize_t iterator = find_smallest_hole(new_size, page_align, heap);
+   u32int iterator = (u32int) find_smallest_hole(new_size, page_align, heap);
    // 3 if no hole, resize heap
    if (iterator == -1) {
       u32int old_heap_length = heap->end_address - heap->start_address;
@@ -261,6 +261,8 @@ void *kalloc_heap(size_t size, u8int page_align, struct heap *heap)
             f_list = (u32int)i;
          }
       }
+      iterator = (u32int)i;
+
 
       if (f_list == -1) {
          struct header *head = (struct header *) old_end_address;
@@ -290,7 +292,7 @@ void *kalloc_heap(size_t size, u8int page_align, struct heap *heap)
       new_size = old_hole_size;
    }
    // double check this, not completely sure here
-   if (page_align) {
+   if (page_align > 0) {
       u32int new_loc = old_hole_pos + PAGE_SIZE - sizeof(struct header);
       struct header *hole = (struct header *) ((u32int)new_loc - sizeof(struct footer));
       hole->size = PAGE_SIZE - sizeof(struct header);
@@ -341,4 +343,16 @@ void kfree_heap(void *p, struct heap *heap)
    // 2. get the header and the footer based on the passed pointer
    // 3. mark the chunk as free in the header
    // 4. add a hole in the space that was previously allocated
+
+   // 1 check for null pointer
+   if (p == 0) {
+      return;
+   }
+   // 2 header and footer
+   struct header *hole = (struct header*) ((u32int)p - sizeof(struct header));
+   struct footer *hole_foot = (struct footer*) ((u32int)hole + hole->size);
+   // 3 set allocated to 0 in hole
+   hole->allocated = 0;
+   // 4 add hole to free list
+   sorted_array_insert((void*)hole, &heap->free_list);
 }
