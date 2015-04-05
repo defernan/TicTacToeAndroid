@@ -220,9 +220,9 @@ void add_hole(void *start, void *end, struct heap *heap)
    hole->magic = HEAP_MAGIC; 
    hole->allocated = 0; //0 or 1?
 
-   // struct footer* footer = (struct footer*)( end - sizeof( struct footer) );
-   // footer->header = hole;
-   // footer->magic = HEAP_MAGIC;
+   struct footer* footer = (struct footer*)( end - sizeof( struct footer) );
+   footer->header = hole;
+   footer->magic = HEAP_MAGIC;
    
    //2 add chunk to free list 
    sorted_array_insert((void*)hole, &heap->free_list );
@@ -358,7 +358,7 @@ void kfree_heap(void *p, struct heap *heap)
    }
    // 2 header and footer
    struct header *hole = (struct header*) ((ssize_t)p - sizeof(struct header));
-   // struct footer *hole_foot = (struct footer*) ((u32int)hole + hole->size - sizeof(struct footer));
+   struct footer *hole_foot = (struct footer*) ((ssize_t)hole + hole->size - sizeof(struct footer));
    // 3 set allocated to 0 in hole
    hole->allocated = 0;
    // 4 add hole to free list
