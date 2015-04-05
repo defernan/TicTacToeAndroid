@@ -215,12 +215,12 @@ void add_hole(void *start, void *end, struct heap *heap)
 
    //1 write header and footer to memory 
    struct header *hole = (struct header*) start;
-   hole->size = (size_t)end - (size_t)start;
+   hole->size = (ssize_t)end - (ssize_t)start;
    // hole->size = heap->end_address - heap->start_address;
    hole->magic = HEAP_MAGIC; 
    hole->allocated = 0; //0 or 1?
 
-   struct footer* footer = (struct footer*)( end - sizeof(footer) );
+   struct footer* footer = (struct footer*)( end - sizeof( struct footer) );
    footer->header = hole;
    footer->magic = HEAP_MAGIC;
    
@@ -322,16 +322,19 @@ void *kalloc_heap(size_t size, u8int page_align, struct heap *heap)
    // not sure if the following is necessary for project
    // adds a new hole if the original hole was split
    if (old_hole_size - new_size > 0) {
-      struct header *hole = (struct header *) (old_hole_pos + size + sizeof(struct header) + sizeof(struct footer));
-      hole->magic = HEAP_MAGIC;
-      hole->allocated = 0;
-      hole->size = old_hole_size - new_size;
-      struct footer *hole_foot = (struct footer *) ((u32int)hole + old_hole_size - new_size - sizeof(struct footer));
-      if ((u32int)hole_foot < heap->end_address) {
-         hole_foot->magic = HEAP_MAGIC;
-         hole_foot->header = hole;
-      }
-      sorted_array_insert((void*)hole, &heap->free_list);
+      u32int add_hole_start = old_hole_pos + size + sizeof(struct header) + sizeof(struct footer);
+      u32int add_hole_end = add_hole_start + old_hole_size - new_size;
+      add_hole(add_hole_start, add_hole_end, heap);
+      // struct header *hole = (struct header *) (old_hole_pos + size + sizeof(struct header) + sizeof(struct footer));
+      // hole->magic = HEAP_MAGIC;
+      // hole->allocated = 0;
+      // hole->size = old_hole_size - new_size;
+      // struct footer *hole_foot = (struct footer *) ((u32int)hole + old_hole_size - new_size - sizeof(struct footer));
+      // if ((u32int)hole_foot < heap->end_address) {
+      //    hole_foot->magic = HEAP_MAGIC;
+      //    hole_foot->header = hole;
+      // }
+      // sorted_array_insert((void*)hole, &heap->free_list);
    }
 
    return (void *) ((u32int)block + sizeof(struct header));
