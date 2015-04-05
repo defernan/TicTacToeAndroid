@@ -8,9 +8,9 @@
 / memset -> YES
 / add_hole -> YES - coalescing
 / find_smallesthole-> YES
-/ kalloc_heap ->NO, in progress, really close
-/ kfree_heap ->NO
-/ page allign in kalloc_heap -> NO
+/ kalloc_heap ->YES - footer integrity
+/ kfree_heap ->Yes
+/ page allign in kalloc_heap -> Yes
 / colescing -> NO
 / ******************************************************************/
 
@@ -19,7 +19,9 @@
 / add_hole -> not sure if footer is right
 / find_smallest_hole -> not sure if hole size is right ie with footer and header accounted for
 /                    -> also not quite sure if page alignment check is right to check offset
-/ kalloc_heap written, but still failing tests, needs to be debugged
+/ The magic number and header pointer in the footer are not being saved.
+/ There is a lot of commented out code, this will be removed, left it in so that you can
+/ follow the changes nd logic more easily
 /
 / ******************************************************************/
 // headers for local functions
