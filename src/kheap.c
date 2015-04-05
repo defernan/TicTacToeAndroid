@@ -180,12 +180,12 @@ ssize_t find_smallest_hole(size_t size,
             //orig
             //(loc+sizeof(header) ) & 0xFFFFF000
             // suggested? loc & PAGE_SIZE != loc
-            if( align( loc ) != (loc) ){
+            if( align( loc + sizeof(struct header)) != (loc + sizeof(struct header)) ){
             // if( align( (void*)(loc + sizeof(struct header) ) ) != (loc + sizeof(struct header)) ){
                 //align
-                offset = PAGE_SIZE - (loc)%PAGE_SIZE;
+                offset = PAGE_SIZE - (loc + sizeof(struct header))%PAGE_SIZE;
             }
-            s32int holeSize = (s32int)hole->size + offset;
+            s32int holeSize = (s32int)hole->size - offset;
             //3
             //check for fit
             if(holeSize >= size){
@@ -298,18 +298,18 @@ void *kalloc_heap(size_t size, u8int page_align, struct heap *heap)
    }
    // 5 page align
    // double check this, not completely sure here
-   if (page_align > 0 && (align(old_hole_pos) != old_hole_pos) ) {
-      // old_hole_pos = align(old_hole_pos);
-      ssize_t new_loc = old_hole_pos + PAGE_SIZE - ((u32int)align(old_hole_pos)) - sizeof(struct header);
-      struct header *hole = old_hole_pos; //(struct header *) ((u32int)new_loc - sizeof(struct footer));
-      hole->size = PAGE_SIZE - ((u32int)align(old_hole_pos)) - sizeof(struct header);
-      hole->magic = HEAP_MAGIC;
-      hole->allocated = 0;
-      struct footer *hole_foot = (struct footer *) ((u32int)new_loc - sizeof(struct footer));
-      hole_foot->magic = HEAP_MAGIC;
-      hole_foot->header = hole;
-      old_hole_pos = new_loc;
-      old_hole_size = old_hole_size - hole->size;
+   if (page_align > 0 && (align(old_hole_pos + sizeof(struct header)) != old_hole_pos + sizeof(struct header)) ) {
+      old_hole_pos = align(old_hole_pos + sizeof(struct header)) - sizeof(struct header);
+      // ssize_t new_loc = old_hole_pos + PAGE_SIZE - ((ssize_t)align(old_hole_pos + sizeof(struct header))) - sizeof(struct header);
+      // struct header *hole = old_hole_pos; //(struct header *) ((u32int)new_loc - sizeof(struct footer));
+      // hole->size = PAGE_SIZE - ((u32int)align(old_hole_pos + sizeof(struct header))) - sizeof(struct header);
+      // hole->magic = HEAP_MAGIC;
+      // hole->allocated = 0;
+      // struct footer *hole_foot = (struct footer *) ((ssize_t)new_loc - sizeof(struct footer));
+      // hole_foot->magic = HEAP_MAGIC;
+      // hole_foot->header = hole;
+      // old_hole_pos = new_loc;
+      // old_hole_size = old_hole_size - hole->size;
    }
    else {
       // 4
