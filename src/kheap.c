@@ -215,7 +215,8 @@ void add_hole(void *start, void *end, struct heap *heap)
 
    //1 write header and footer to memory 
    struct header *hole = (struct header*) start;
-   hole->size = heap->end_address - heap->start_address;
+   hole->size = (size_t)end - (size_t)start;
+   // hole->size = heap->end_address - heap->start_address;
    hole->magic = HEAP_MAGIC; 
    hole->allocated = 0; //0 or 1?
 
