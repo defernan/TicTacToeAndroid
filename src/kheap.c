@@ -223,7 +223,7 @@ void add_hole(void *start, void *end, struct heap *heap)
    hole->magic = HEAP_MAGIC; 
    hole->allocated = 0; //0 or 1?
 
-   struct footer* footer = (struct footer*)( end - sizeof( struct footer) );
+   struct footer* footer = (struct footer*)( (ssize_t)end - sizeof( struct footer) );
    if ((ssize_t)footer < heap->end_address) {
       footer->header = hole;
       footer->magic = HEAP_MAGIC;
@@ -260,7 +260,7 @@ void *kalloc_heap(size_t size, u8int page_align, struct heap *heap)
       heap_resize(old_heap_length+new_size, heap);
       u32int new_heap_length = heap->end_address - heap->start_address;
 
-      u32int f_list = -1;
+      ssize_t f_list = -1;
       u32int value = 0x0;
       //size_t i;
       for (iterator = 0; iterator < heap->free_list.size; iterator++) {
@@ -323,7 +323,7 @@ void *kalloc_heap(size_t size, u8int page_align, struct heap *heap)
    block->magic = HEAP_MAGIC;
    block->allocated = 1;
    block->size = new_size;
-   struct footer *block_foot = (struct footer *) (block + new_size - sizeof(struct footer));
+   struct footer *block_foot = (struct footer *) ((ssize_t)block + new_size - sizeof(struct footer));
    // struct footer *block_foot = (struct footer *) (old_hole_pos + sizeof(struct header) + size);
    block_foot->magic = HEAP_MAGIC;
    block_foot->header = block;
