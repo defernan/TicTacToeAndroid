@@ -266,14 +266,15 @@ void *kalloc_heap(size_t size, u8int page_align, struct heap *heap)
       }
 
       if (f_list == -1) {
-         struct header *head = (struct header *) old_end_address;
-         head->magic = HEAP_MAGIC;
-         head->size = (size_t)( new_heap_length - old_heap_length);
-         head->allocated = 0;
-         struct footer *foot = (struct footer *) (old_end_address + head->size - sizeof(struct footer));
-         foot->magic = HEAP_MAGIC;
-         foot->header = head;
-         sorted_array_insert((void*)head, &heap->free_list);
+         add_hole(old_end_address, old_end_address + new_heap_length - old_heap_length, heap);
+         // struct header *head = (struct header *) old_end_address;
+         // head->magic = HEAP_MAGIC;
+         // head->size = (size_t)( new_heap_length - old_heap_length);
+         // head->allocated = 0;
+         // struct footer *foot = (struct footer *) (old_end_address + head->size - sizeof(struct footer));
+         // foot->magic = HEAP_MAGIC;
+         // foot->header = head;
+         // sorted_array_insert((void*)head, &heap->free_list);
       }
       else {
          struct header *head = sorted_array_lookup(f_list, &heap->free_list);
