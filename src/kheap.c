@@ -258,7 +258,7 @@ void *kalloc_heap(size_t size, u8int page_align, struct heap *heap)
 
       ssize_t f_list = -1;
       u32int value = 0x0;
-      //size_t i;
+      
       for (iterator = 0; iterator < heap->free_list.size; iterator++) {
          u32int temp_value = (u32int) sorted_array_lookup(iterator, &heap->free_list);
          if (temp_value > value) {
@@ -269,14 +269,6 @@ void *kalloc_heap(size_t size, u8int page_align, struct heap *heap)
 
       if (f_list == -1) {
          add_hole(old_end_address, old_end_address + new_heap_length - old_heap_length, heap);
-         // struct header *head = (struct header *) old_end_address;
-         // head->magic = HEAP_MAGIC;
-         // head->size = (size_t)( new_heap_length - old_heap_length);
-         // head->allocated = 0;
-         // struct footer *foot = (struct footer *) (old_end_address + head->size - sizeof(struct footer));
-         // foot->magic = HEAP_MAGIC;
-         // foot->header = head;
-         // sorted_array_insert((void*)head, &heap->free_list);
       }
       else {
          struct header *head = sorted_array_lookup(f_list, &heap->free_list);
@@ -298,16 +290,6 @@ void *kalloc_heap(size_t size, u8int page_align, struct heap *heap)
    // double check this, not completely sure here
    if (page_align > 0 && (align(old_hole_pos + sizeof(struct header)) != old_hole_pos + sizeof(struct header)) ) {
       old_hole_pos = align(old_hole_pos + sizeof(struct header)) - sizeof(struct header);
-      // ssize_t new_loc = old_hole_pos + PAGE_SIZE - ((ssize_t)align(old_hole_pos + sizeof(struct header))) - sizeof(struct header);
-      // struct header *hole = old_hole_pos; //(struct header *) ((u32int)new_loc - sizeof(struct footer));
-      // hole->size = PAGE_SIZE - ((u32int)align(old_hole_pos + sizeof(struct header))) - sizeof(struct header);
-      // hole->magic = HEAP_MAGIC;
-      // hole->allocated = 0;
-      // struct footer *hole_foot = (struct footer *) ((ssize_t)new_loc - sizeof(struct footer));
-      // hole_foot->magic = HEAP_MAGIC;
-      // hole_foot->header = hole;
-      // old_hole_pos = new_loc;
-      // old_hole_size = old_hole_size - hole->size;
    }
    else {
       // 4
@@ -315,30 +297,20 @@ void *kalloc_heap(size_t size, u8int page_align, struct heap *heap)
    }
    // 6
    struct header *block = old_hole_pos;
-   // struct header *block = (struct header *)old_hole_pos;
    block->magic = HEAP_MAGIC;
    block->allocated = 1;
    block->size = new_size;
+   
    struct footer *block_foot = (struct footer *) ((ssize_t)block + new_size - sizeof(struct footer));
-   // struct footer *block_foot = (struct footer *) (old_hole_pos + sizeof(struct header) + size);
    block_foot->magic = HEAP_MAGIC;
    block_foot->header = block;
+   
    // not sure if the following is necessary for project
    // adds a new hole if the original hole was split
    if (old_hole_size - new_size > 0) {
       ssize_t add_hole_start = (ssize_t)(old_hole_pos + new_size);
       ssize_t add_hole_end = (ssize_t)(add_hole_start + old_hole_size - new_size);
       add_hole(add_hole_start, add_hole_end, heap);
-      // struct header *hole = (struct header *) (old_hole_pos + size + sizeof(struct header) + sizeof(struct footer));
-      // hole->magic = HEAP_MAGIC;
-      // hole->allocated = 0;
-      // hole->size = old_hole_size - new_size;
-      // struct footer *hole_foot = (struct footer *) ((u32int)hole + old_hole_size - new_size - sizeof(struct footer));
-      // if ((u32int)hole_foot < heap->end_address) {
-      //    hole_foot->magic = HEAP_MAGIC;
-      //    hole_foot->header = hole;
-      // }
-      // sorted_array_insert((void*)hole, &heap->free_list);
    }
 
    return (void *) ((ssize_t)block + sizeof(struct header));
