@@ -9,7 +9,7 @@ Team Members-Dezmon Fernandez
 
 Hours Spent-
     Intermediate1- 10 minutes
-    Intermediate2- ...
+    Intermediate2- 8 hrs
     Final- ..
 
 Features-
