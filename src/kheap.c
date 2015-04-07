@@ -221,9 +221,9 @@ void add_hole(void *start, void *end, struct heap *heap)
    }
    // check memory block to the right for coalescing
    if (end < heap->end_address) {
-      if (((struct header *)end)->allocated == 0 ) {
+      if (((struct header *)((ssize_t)end))->allocated == 0 ) {
          sorted_array_remove((ssize_t)end, &heap->free_list);
-         end = end + ((struct header *)end)->size;
+         end = (ssize_t)end + ((struct header *)end)->size;
       }
    }
 
