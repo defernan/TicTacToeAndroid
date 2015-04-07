@@ -214,10 +214,9 @@ void add_hole(void *start, void *end, struct heap *heap)
 
    //1 write header and footer to memory 
    struct header *hole = (struct header*) start;
-   hole->size = (ssize_t)end - (ssize_t)start;
-   // hole->size = heap->end_address - heap->start_address;
+   hole->size = (ssize_t)end - (ssize_t)start; 
    hole->magic = HEAP_MAGIC; 
-   hole->allocated = 0; //0 or 1?
+   hole->allocated = 0;
 
    struct footer* footer = (struct footer*)( (ssize_t)end - sizeof( struct footer) );
    if ((ssize_t)footer < heap->end_address) {
@@ -257,8 +256,8 @@ void *kalloc_heap(size_t size, u8int page_align, struct heap *heap)
       u32int new_heap_length = heap->end_address - heap->start_address;
 
       ssize_t f_list = -1;
-      u32int value = 0x0;
-      
+      u32int value = 0;
+
       for (iterator = 0; iterator < heap->free_list.size; iterator++) {
          u32int temp_value = (u32int) sorted_array_lookup(iterator, &heap->free_list);
          if (temp_value > value) {
