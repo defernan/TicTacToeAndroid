@@ -211,6 +211,19 @@ void add_hole(void *start, void *end, struct heap *heap)
    // 2. add chunk to free list
   
    //0
+   // check memory block to the left for coalescing
+   if (start > heap->start_address) {
+      struct footer *left_foot = (struct footer *)((ssize_t)start - sizeof(struct footer));
+      if ((struct header *)(left_foot->header)->allocated == 0) {
+         start = left_foot->header;
+      }
+   }
+   // check memory block to the right for coalescing
+   if (end < heap->end_address) {
+      if (((struct header *)end)->allocated == 0 ) {
+         end = end + ((struct header *)end)->size;
+      }
+   }
 
    //1 write header and footer to memory 
    struct header *hole = (struct header*) start;
@@ -333,7 +346,8 @@ void kfree_heap(void *p, struct heap *heap)
    struct header *hole = (struct header*) ((ssize_t)p - sizeof(struct header));
    struct footer *hole_foot = (struct footer*) ((ssize_t)hole + hole->size - sizeof(struct footer));
    // 3 set allocated to 0 in hole
-   hole->allocated = 0;
-   // 4 add hole to free list
-   sorted_array_insert((void*)hole, &heap->free_list);
+   // hole->allocated = 0;
+   // // 4 add hole to free list
+   // sorted_array_insert((void*)hole, &heap->free_list);
+   add_hole(hole, (ssize_t)hole + hole->size, heap);
 }
