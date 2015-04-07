@@ -216,11 +216,13 @@ void add_hole(void *start, void *end, struct heap *heap)
       struct footer *left_foot = (struct footer *)((ssize_t)start - sizeof(struct footer));
       if ((struct header *)(left_foot->header)->allocated == 0) {
          start = left_foot->header;
+         sorted_array_remove((ssize_t)start, &heap->free_list);
       }
    }
    // check memory block to the right for coalescing
    if (end < heap->end_address) {
       if (((struct header *)end)->allocated == 0 ) {
+         sorted_array_remove((ssize_t)end, &heap->free_list);
          end = end + ((struct header *)end)->size;
       }
    }
