@@ -51,13 +51,14 @@ int main(int argc, char **argv)
    t_assert("The header should indicate that the third block is allocated",
             head3->allocated == 1);
    // free first allocation
+   
    kfree_heap(allocated1, heap);
 
    // check to see that the first and second blocks are combined
    t_assert("The header should indicate that the first block is allocated",
             head1->allocated == 0);
    t_assert("The size of the first block should now be the size of the first plus the second",
-            head1->size == ALLOCATION_SIZE*2);
+            head1->size == total_size*2);
    t_assert("The header should indicate that the third block is allocated",
             head3->allocated == 1);
 
