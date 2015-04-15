@@ -217,6 +217,7 @@ void add_hole(void *start, void *end, struct heap *heap)
       if ((struct header *)(left_foot->header)->allocated == 0) {
          start = left_foot->header;
          sorted_array_remove((ssize_t)sorted_array_lookup((ssize_t)start, &heap->free_list), &heap->free_list);
+         //add_hole(start, end, heap);
       }
    }
    // check memory block to the right for coalescing
@@ -224,6 +225,7 @@ void add_hole(void *start, void *end, struct heap *heap)
       if (((struct header *)((ssize_t)end))->allocated == 0) {
          sorted_array_remove((ssize_t)sorted_array_lookup((ssize_t)end, &heap->free_list), &heap->free_list);
          end = (ssize_t)end + ((struct header *)end)->size;
+         //add_hole(start, end, heap);
       }
    }
 
@@ -303,7 +305,10 @@ void *kalloc_heap(size_t size, u8int page_align, struct heap *heap)
    // 5 page align
    // double check this, not completely sure here
    if (page_align > 0 && (align(old_hole_pos + sizeof(struct header)) != old_hole_pos + sizeof(struct header)) ) {
+ 
+      old_hole_size = old_hole_size - (u32int)(align(old_hole_pos + sizeof(struct header)) - sizeof(struct header) - old_hole_pos);
       old_hole_pos = align(old_hole_pos + sizeof(struct header)) - sizeof(struct header);
+      
    }
    else {
       // 4
