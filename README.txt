@@ -13,7 +13,7 @@ Hours Spent-
     Final- ..
 
 Features-
-
+	Added additional coalescing test to check the size of the coalesced region.
 
 Hardest Part-
 

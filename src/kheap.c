@@ -304,6 +304,7 @@ void *kalloc_heap(size_t size, u8int page_align, struct heap *heap)
    }
    // 5 page align
    // double check this, not completely sure here
+   // ssize_t new_hole_pos = (ssize_t) old_hole_pos;
    if (page_align > 0 && (align(old_hole_pos + sizeof(struct header)) != old_hole_pos + sizeof(struct header)) ) {
  
       old_hole_size = old_hole_size - (u32int)(align(old_hole_pos + sizeof(struct header)) - sizeof(struct header) - old_hole_pos);
